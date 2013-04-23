@@ -20,17 +20,15 @@
 #define RX_BUF_MAX_SIZE 100
 #define TX_BUF_MAX_SIZE 80
 
-extern volatile int uartGotLine;
-
 void initUart();
 void uartSetRxFunc( void( *rx_func )( char c ) );
 int writeTxBuffer( const char *str );
-int readRxBuffer( char *str, unsigned int length );
-void clearTxBuffer();
-void clearRxBuffer();
-void flushTxBuffer();
+int readRxBuffer( char *str );
+void clearTxBuffer( void );
+void clearRxBuffer( void );
+void flushTxBuffer( void );
 
-cBuffer* uartGetRxBuffer();
-cBuffer* uartGetTxBuffer();
+cBuffer* uartGetRxBuffer( void );
+cBuffer* uartGetTxBuffer( void );
 
 #endif /* UART_H_ */

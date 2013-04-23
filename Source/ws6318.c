@@ -28,7 +28,7 @@ char networkOK[] = { "\r\n+CREG: 0,1\r\n\r\nOK\r\n" };
 char error[] = { "ERROR\r\n" };
 char ring[] = { "RING\r\n" };
 
-int moduleInit()
+int moduleInit( void )
 {
 	int i;
 
@@ -88,7 +88,7 @@ int moduleConfigureGPIO( unsigned char io, unsigned char dir, unsigned char pull
 
 	char cmd[] = { "+WMGPIOCFG=00,0,0" };
 
-	if ( io >= 1 && io <= 12 && dir >= 0 && dir <= 1 && pull >= 0 && pull <= 1 )
+	if ( io >= 1 && io <= 12 && dir < 2 && pull < 2 )
 	{
 		cmd[11] = io / 10 + 0x30;
 		cmd[12] = io % 10 + 0x30;
@@ -106,7 +106,7 @@ int moduleSetGPIO( unsigned char io, unsigned char val )
 {
 	char cmd[] = { "+WMGPIO=00,0" };
 
-	if ( io >= 1 && io <= 12 && val >= 0 && val <= 1 )
+	if ( io >= 1 && io <= 12 && val < 2 )
 	{
 		cmd[8] = io / 10 + 0x30;
 		cmd[9] = io % 10 + 0x30;
@@ -175,12 +175,12 @@ void moduleUartActivity( char data )
 
 }
 
-status getStatus()
+status getStatus( void )
 {
 	return moduleStatus;
 }
 
-void moduleOn()
+void moduleOn( void )
 {
 	ONOFF_LOW;
 	delay_ms(250);
@@ -189,14 +189,14 @@ void moduleOn()
 	ONOFF_LOW;
 }
 
-void moduleReset()
+void moduleReset( void )
 {
 	RESET_HIGH;
 	delay_ms( 10 );
 	RESET_LOW;
 }
 
-void modulePowerOff()
+void modulePowerOff( void )
 {
 	POWEREN_HIGH;
 	delay_ms( 500 );

@@ -28,12 +28,12 @@ void setTimeout( unsigned int t )
 	ms = t;
 }
 
-int timedOut()
+int timedOut( void )
 {
 	return timeout_flag;
 }
 
-void initTimerA()
+void initTimerA( void )
 {
 	TACCR0 = 16000 - 1;
 	TACCTL0 = CCIE;

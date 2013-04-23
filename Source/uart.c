@@ -21,40 +21,44 @@ char txData[ TX_BUF_MAX_SIZE ];
 
 volatile int uartRxOverflow;
 
-void initUart(void)
+void initUart( void )
 {
-	P1SEL |= RX + TX;
-	P1SEL2 |= RX + TX;
+	P1SEL |= RX + TX;				// USCIA0
+	P1SEL2 |= RX + TX;				// P1.1 - Rxd, P1.2 - Txd
 
-	UCA0CTL1 |= UCSSEL_2;
-	UCA0BR0 = 104;
-	UCA0BR1 = 0;
-	UCA0MCTL = UCBRF_3 + UCOS16;
-	UCA0CTL1 &= ~UCSWRST;
+	UCA0CTL1 |= UCSSEL_2;			// SMCLK
+	UCA0BR0 = 104;					// 16MHz 9600
+	UCA0BR1 = 0;					//
+	UCA0MCTL = UCBRF_3 + UCOS16;	//
+	UCA0CTL1 &= ~UCSWRST;			// Initialize USCI state machine
 
-	bufferInit( &rxBuf, rxData, RX_BUF_MAX_SIZE );
-	bufferInit( &txBuf, txData, TX_BUF_MAX_SIZE );
+	bufferInit( &rxBuf, rxData, RX_BUF_MAX_SIZE );	// Initialize receiving buffer
+	bufferInit( &txBuf, txData, TX_BUF_MAX_SIZE );	// Initialize transmitting buffer
 
-	UartRxFunc = 0;
+	UartRxFunc = 0;					// No user defined received data processing
 
-	IE2 |= UCA0RXIE;
+	IE2 |= UCA0RXIE;				// Enable USCIA0 rx interrupt
 }
 
-cBuffer* uartGetRxBuffer()
+// Return reference to UART receive buffer
+cBuffer* uartGetRxBuffer( void )
 {
 	return &rxBuf;
 }
 
-cBuffer* uartGetTxBuffer()
+// Return reference to UART transmit buffer
+cBuffer* uartGetTxBuffer( void )
 {
 	return &txBuf;
 }
 
+// Attach user defined received data postprocessing function
 void uartSetRxFunc( void( *rx_func )( char c ) )
 {
 	UartRxFunc = rx_func;
 }
 
+// Put string to UART transmit buffer
 int writeTxBuffer( const char *str )
 {
 
@@ -67,7 +71,8 @@ int writeTxBuffer( const char *str )
 
 }
 
-int readRxBuffer( char *str, unsigned int length )
+// Put buffered data to str and return length
+int readRxBuffer( char *str )
 {
 	unsigned int i;
 
@@ -82,22 +87,23 @@ int readRxBuffer( char *str, unsigned int length )
 	}
 
 	str[ i ] = '\0';
-	uartGotLine = FALSE;
 
 	return i;
-
 }
 
+// Clear UART transmit buffer
 void clearTxBuffer()
 {
 	bufferFlush( &txBuf );
 }
 
+// Clear UART receive buffer
 void clearRxBuffer()
 {
 	bufferFlush( &rxBuf );
 }
 
+// Initialize transmitting data from TX buffer
 void flushTxBuffer()
 {
 
@@ -107,7 +113,7 @@ void flushTxBuffer()
 }
 
 #pragma vector=USCIAB0TX_VECTOR
-__interrupt void USCI0TX_ISR(void)
+__interrupt void USCI0TX_ISR( void )
 {
 
 	char data;
@@ -120,7 +126,7 @@ __interrupt void USCI0TX_ISR(void)
 }
 
 #pragma vector=USCIAB0RX_VECTOR
-__interrupt void USCI0RX_ISR(void)
+__interrupt void USCI0RX_ISR( void )
 {
 
 	char data;

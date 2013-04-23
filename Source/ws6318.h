@@ -42,11 +42,11 @@ typedef enum status_t {
 	REG_OK
 } status;
 
-int moduleInit();
-void moduleOn();
-void moduleReset();
-void modulePowerOff();
-status getStatus();
+int moduleInit( void );
+void moduleOn( void );
+void moduleReset( void );
+void modulePowerOff( void );
+status getStatus( void );
 int moduleSendCommand( char  *cmd );
 int moduleExecuteCommand( char *cmd, char *resp );
 void moduleUartActivity( char data );
