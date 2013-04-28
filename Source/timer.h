@@ -10,10 +10,11 @@
 #ifndef DELAY_H_
 #define DELAY_H_
 
-void initTimerA( void );
+void tick1ms( void );
+void initTimer( void );
 void delay_ms( unsigned int d );
 void setTimeout( unsigned int t );
 int timedOut( void );
-void attachTimerA( void( *tick_func )( void ) );
+unsigned long getTimestamp( void );
 
 #endif /* DELAY_H_ */

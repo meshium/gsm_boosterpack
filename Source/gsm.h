@@ -1,5 +1,5 @@
 /*
- * ws6318.h
+ * gsm.h
  *
  *  Created on: 10.03.2013
  *      Author: al
@@ -7,6 +7,9 @@
 
 #ifndef WS6318_H_
 #define WS6318_H_
+
+#include "uart.h"
+#include "timer.h"
 
 #define ONOFF_PIN BIT5
 #define ONOFF_PORT P1OUT
@@ -34,23 +37,22 @@
 #define ERROR 2
 #define TIMEOUT 3
 
+#define BREAK_TIMEOUT 10	// timed out if line idle 20ms
+#define CMD_TIMEOUT 200
+
 typedef enum status_t {
 	OFF,
 	ON,
 	COMMUNICATE,
 	SIM_OK,
-	REG_OK
+	REG_OK,
+	SMS_OK
 } status;
 
-int moduleInit( void );
-void moduleOn( void );
-void moduleReset( void );
-void modulePowerOff( void );
-status getStatus( void );
-int moduleSendCommand( char  *cmd );
-int moduleExecuteCommand( char *cmd, char *resp );
-void moduleUartActivity( char data );
-int moduleConfigureGPIO( unsigned char io, unsigned char dir, unsigned char pull );
-int moduleSetGPIO( unsigned char io, unsigned char val );
+int gsmInit( void );
+int gsmConfigureGPIO( unsigned char io, unsigned char dir, unsigned char pull );
+int gsmSetGPIO( unsigned char io, unsigned char val );
+status gsmGetStatus( void );
+int gsmExecuteCommand( const char  *cmd, const char *resp, unsigned int time2answer );
 
 #endif /* WS6318_H_ */

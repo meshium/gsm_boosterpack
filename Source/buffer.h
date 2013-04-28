@@ -23,7 +23,7 @@ typedef struct cBuffer_t {
 void bufferInit( cBuffer *buffer, char *start, unsigned int size );
 int bufferRead( cBuffer *buffer, char *data );
 int bufferWrite( cBuffer *buffer, char data );
-int bufferSearch( cBuffer *buffer, char *data );
+int bufferSearch( cBuffer *buffer, const char *data );
 void bufferFlush( cBuffer *buffer );
 int bufferEmpty( cBuffer *buffer );
 

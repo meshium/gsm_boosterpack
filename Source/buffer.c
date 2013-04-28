@@ -8,7 +8,6 @@
 #include "msp430g2553.h"
 #include "buffer.h"
 #include "string.h"
-#include "uart.h"
 
 void bufferInit( cBuffer *buffer, char *start, unsigned int size )
 {
@@ -20,6 +19,7 @@ void bufferInit( cBuffer *buffer, char *start, unsigned int size )
 
 int bufferRead( cBuffer *buffer, char *data )
 {
+	*data = 0;
 
 	if ( buffer->data_len )
 	{
@@ -52,7 +52,7 @@ int bufferWrite( cBuffer *buffer, char data )
 	return FALSE;
 }
 
-int bufferSearch( cBuffer *buffer, char *data )
+int bufferSearch( cBuffer *buffer, const char *data )
 {
 	unsigned int i, j, l;
 	int start;

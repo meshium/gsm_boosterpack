@@ -11,22 +11,20 @@
 #ifndef UART_H_
 #define UART_H_
 
-#define RX BIT1
-#define TX BIT2
-
-#define CLI_UARTTX IE2 &= ~UCA0TXIE;
-#define STI_UARTTX IE2 |= UCA0TXIE;
-
-#define RX_BUF_MAX_SIZE 100
+#define RX_BUF_MAX_SIZE 80
 #define TX_BUF_MAX_SIZE 80
 
-void initUart();
-void uartSetRxFunc( void( *rx_func )( char c ) );
+void initUart( void );
+int uartBufferedTx( char *data );
+void uartBufferedRx( char data );
 int writeTxBuffer( const char *str );
 int readRxBuffer( char *str );
 void clearTxBuffer( void );
 void clearRxBuffer( void );
 void flushTxBuffer( void );
+int txBufferEmpty( void );
+int rxBufferEmpty( void );
+int rxBufferOverflow( void );
 
 cBuffer* uartGetRxBuffer( void );
 cBuffer* uartGetTxBuffer( void );

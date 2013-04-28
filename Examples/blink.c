@@ -1,5 +1,5 @@
 /*
- * main.c
+ * blink.c
  *
  *  Created on: 10.03.2013
  *      Author: al
@@ -8,16 +8,42 @@
 
 #include "msp430g2553.h"
 #include "global.h"
-#include "ws6318.h"
-#include "uart.h"
-#include "delay.h"
+#include "timer.h"
+#include "gsm.h"
 
-volatile unsigned int tickCount;
-volatile int wismoBlink;
+void setup( void );
+
+int main( void )
+{
+	unsigned char wismoLED = 0;
+
+	setup();					// setting up ports and registers
+
+	if ( gsmInit() )			// initializing GSM module (powering up, checking SIM-card)
+	{
+			if ( gsmConfigureGPIO( WISMOLED, OUTPUT, PULLDOWN ) )
+			{
+				while ( 1 )
+				{
+					delay_ms( 500 );
+
+					wismoLED ^= 0x01;
+					gsmSetGPIO( WISMOLED, wismoLED );	// blinking by the GSM boosterpack led
+				}
+
+			}
+	}
+
+	P1OUT |= LED0;	// turn on red led on the launchpad - module initialisation was unsuccessful
+
+	while (1);
+}
 
 // Setting up MCU ports and registers
 void setup( void )
 {
+	WDTCTL = WDTPW + WDTHOLD;	// disabling watchdog timer
+
 	if (CALBC1_16MHZ==0xFF)
 	{
 		while(1);				// Stop if calibration table erased
@@ -44,52 +70,4 @@ void setup( void )
 	P2REN |= READY_PIN;
 	P2OUT |= READY_PIN;
 
-}
-
-// Receive control every 1ms from TimerA interrupt handler
-// Every 500 cycles (0.5 sec) sets the flag to turning on/off GSM module GPIO
-// that connected to the GSM boosterpack LED indicator (WISMO_LED)
-void moduleBlinkLED( void )
-{
-	if ( tickCount++ >= 500 )
-	{
-		tickCount = 0;
-		wismoBlink = TRUE;
-	}
-}
-
-int main( void )
-{
-	WDTCTL = WDTPW + WDTHOLD;	// disabling watchdog timer
-
-	setup();					// setting up ports and registers
-	initTimerA();				// initializing TimerA
-	initUart();					// initializing USCIA0 to 9600 baudrate
-
-	__enable_interrupt();
-
-	unsigned char wismoLED = 0;
-	wismoBlink = FALSE;
-
-	if ( moduleInit() )			// initializing GSM module (powering up, checking SIM-card)
-	{
-			if ( moduleConfigureGPIO( WISMOLED, OUTPUT, PULLDOWN ) )
-			{
-				attachTimerA( moduleBlinkLED );	// attach function to handling 1ms ticks
-
-				while ( 1 )
-				{
-					while( ~wismoBlink );
-
-					wismoBlink = FALSE;
-					wismoLED ^= 0x01;
-					moduleSetGPIO( WISMOLED, wismoLED );	// blinking by the GSM boosterpack led
-				}
-
-			}
-	}
-
-	P1OUT |= LED0;	// turn on red led on the launchpad - module initialisation was unsuccessful
-
-	while (1);
 }

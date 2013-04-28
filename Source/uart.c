@@ -6,12 +6,10 @@
  */
 
 #include "msp430g2553.h"
+#include "interrupts.h"
 #include "uart.h"
 #include "buffer.h"
 #include "string.h"
-
-typedef void( *voidFuncPtr )( char );
-static volatile voidFuncPtr UartRxFunc;
 
 cBuffer txBuf;
 cBuffer rxBuf;
@@ -23,21 +21,30 @@ volatile int uartRxOverflow;
 
 void initUart( void )
 {
-	P1SEL |= RX + TX;				// USCIA0
-	P1SEL2 |= RX + TX;				// P1.1 - Rxd, P1.2 - Txd
 
-	UCA0CTL1 |= UCSSEL_2;			// SMCLK
-	UCA0BR0 = 104;					// 16MHz 9600
-	UCA0BR1 = 0;					//
-	UCA0MCTL = UCBRF_3 + UCOS16;	//
-	UCA0CTL1 &= ~UCSWRST;			// Initialize USCI state machine
+	initUsci2Uart();
 
 	bufferInit( &rxBuf, rxData, RX_BUF_MAX_SIZE );	// Initialize receiving buffer
 	bufferInit( &txBuf, txData, TX_BUF_MAX_SIZE );	// Initialize transmitting buffer
 
-	UartRxFunc = 0;					// No user defined received data processing
+	attachUsciRx( uartBufferedRx );
+	attachUsciTx( uartBufferedTx );
 
-	IE2 |= UCA0RXIE;				// Enable USCIA0 rx interrupt
+	uartRxOverflow = 0;
+}
+
+void uartBufferedRx( char data )
+{
+	if ( !bufferWrite( &rxBuf, data ) )
+		uartRxOverflow++;
+}
+
+int uartBufferedTx( char *data )
+{
+	if ( bufferRead( &txBuf, data ) )
+		return TRUE;
+
+	return FALSE;
 }
 
 // Return reference to UART receive buffer
@@ -52,11 +59,6 @@ cBuffer* uartGetTxBuffer( void )
 	return &txBuf;
 }
 
-// Attach user defined received data postprocessing function
-void uartSetRxFunc( void( *rx_func )( char c ) )
-{
-	UartRxFunc = rx_func;
-}
 
 // Put string to UART transmit buffer
 int writeTxBuffer( const char *str )
@@ -68,7 +70,6 @@ int writeTxBuffer( const char *str )
 
 	for( i = 0; i < length; i++)
 		bufferWrite( &txBuf, str[i] );
-
 }
 
 // Put buffered data to str and return length
@@ -92,52 +93,37 @@ int readRxBuffer( char *str )
 }
 
 // Clear UART transmit buffer
-void clearTxBuffer()
+void clearTxBuffer( void )
 {
 	bufferFlush( &txBuf );
 }
 
 // Clear UART receive buffer
-void clearRxBuffer()
+void clearRxBuffer( void )
 {
 	bufferFlush( &rxBuf );
+	uartRxOverflow = 0;
 }
 
 // Initialize transmitting data from TX buffer
-void flushTxBuffer()
+void flushTxBuffer( void )
 {
 
 	if ( !bufferEmpty( &txBuf ) )
-		STI_UARTTX;
-
+		STI_USCITX;
 }
 
-#pragma vector=USCIAB0TX_VECTOR
-__interrupt void USCI0TX_ISR( void )
+int txBufferEmpty( void )
 {
-
-	char data;
-
-	if ( bufferRead( &txBuf, &data ) )
-		UCA0TXBUF = data;
-	else
-		CLI_UARTTX;
-
+	return bufferEmpty( &txBuf );
 }
 
-#pragma vector=USCIAB0RX_VECTOR
-__interrupt void USCI0RX_ISR( void )
+int rxBufferEmpty( void )
 {
-
-	char data;
-
-	data = UCA0RXBUF;
-
-	if ( !bufferWrite( &rxBuf, data ) )
-		uartRxOverflow++;
-
-	if ( UartRxFunc )
-		UartRxFunc( data );
-
+	return bufferEmpty( &rxBuf );
 }
 
+int rxBufferOverflow( void )
+{
+	return uartRxOverflow;
+}

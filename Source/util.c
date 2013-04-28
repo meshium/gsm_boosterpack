@@ -5,7 +5,7 @@
  *      Author: al
  */
 
-unsigned int strlen( char *str )
+unsigned int strlen1( char *str )
 {
 	unsigned int i = 0;
 
@@ -13,3 +13,4 @@ unsigned int strlen( char *str )
 
 	return i;
 }
+

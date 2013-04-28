@@ -8,8 +8,12 @@
 #ifndef GLOBAL_H_
 #define GLOBAL_H_
 
+#define TIMER_DIV	16000
+
 #define FALSE 0
 #define TRUE -1
+
+
 
 #define INIT_TRIES 3
 
