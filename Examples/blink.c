@@ -8,7 +8,6 @@
 
 #include "msp430g2553.h"
 #include "global.h"
-#include "timer.h"
 #include "gsm.h"
 
 void setup( void );
@@ -44,14 +43,14 @@ void setup( void )
 {
 	WDTCTL = WDTPW + WDTHOLD;	// disabling watchdog timer
 
-	if (CALBC1_16MHZ==0xFF)
+	if (CALBC1_1MHZ==0xFF)
 	{
 		while(1);				// Stop if calibration table erased
 	}
 
 	DCOCTL = 0;					// Select lowest DCOx and MODx settings
-	BCSCTL1 = CALBC1_16MHZ;		// Set DCO to 16MHz
-	DCOCTL = CALBC1_16MHZ;		//
+	BCSCTL1 = CALBC1_1MHZ;      // Set DCO 1MHZ
+	DCOCTL = CALDCO_1MHZ;
 
 	P1SEL = 0;
 	P1SEL2 = 0;

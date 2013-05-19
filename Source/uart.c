@@ -59,7 +59,6 @@ cBuffer* uartGetTxBuffer( void )
 	return &txBuf;
 }
 
-
 // Put string to UART transmit buffer
 int writeTxBuffer( const char *str )
 {
@@ -69,7 +68,31 @@ int writeTxBuffer( const char *str )
 	length = strlen( str );
 
 	for( i = 0; i < length; i++)
-		bufferWrite( &txBuf, str[i] );
+		if ( !bufferWrite( &txBuf, str[i] ) )
+			return FALSE;
+
+	return TRUE;
+}
+
+int sendData( const char *str )
+{
+	unsigned i, length;
+
+	length = strlen( str );
+
+	for ( i = 0; i < length; i++ )
+	{
+		if ( &txBuf.data_len >= &txBuf.size )
+		{
+			flushTxBuffer();
+			while ( !txBufferEmpty() );
+		}
+		bufferWrite( &txBuf, str[ i ] );
+	}
+
+	if ( !txBufferEmpty() )
+		flushTxBuffer();
+
 }
 
 // Put buffered data to str and return length

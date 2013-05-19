@@ -13,8 +13,6 @@
 #define FALSE 0
 #define TRUE -1
 
-
-
 #define INIT_TRIES 3
 
 #define BTN BIT3

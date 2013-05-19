@@ -28,9 +28,12 @@ void gsmReset( void );
 const char ok[] = { "OK\r\n" };
 const char simOK[] = { "\r\n+CPIN: READY\r\n\r\nOK\r\n" };
 const char networkOK[] = { "\r\n+CREG: 0,1\r\n\r\nOK\r\n" };
+const char smsSendOK[] = { "\r\n+CMGS: " };
 const char error[] = { "ERROR\r\n" };
 const char ring[] = { "RING\r\n" };
 const char prompt[] = { "\r\n>" };
+
+char buffer[ MAX_SMS_LEN ];
 
 int gsmInit( void )
 {
@@ -67,6 +70,7 @@ int gsmInit( void )
 
 		if ( moduleStatus == ON )
 		{
+
 			if ( gsmExecuteCommand( "E0", ok, CMD_TIMEOUT ) )
 			{
 				moduleStatus = COMMUNICATE;
@@ -79,7 +83,11 @@ int gsmInit( void )
 					{
 						moduleStatus = SMS_OK;
 
-						return TRUE;
+						if ( gsmExecuteCommand( "*PSSTKI=0", ok, CMD_TIMEOUT ) )
+						{
+							moduleStatus = STK_OFF;
+							return TRUE;
+						}
 					}
 				}
 			}
@@ -114,6 +122,25 @@ void gsmUartRx( char c )
 	gsmReceiveTimeout = FALSE;
 
 	uartBufferedRx( c );
+}
+
+int gsmCreateSMS( const char *pn )
+{
+	gsmClearBuffers();
+	gsmPrepareCommand( "AT+CMGS=\"" );
+	gsmPrepareCommand( pn );
+	gsmPrepareCommand( "\"\r");
+
+	return gsmExecutePreparedCommand( prompt, CMD_TIMEOUT );
+}
+
+int gsmSendSMS( void )
+{
+	gsmClearBuffers();
+	gsmPrepareCommand( "\x1A" );
+
+	return gsmExecutePreparedCommand( smsSendOK, SMS_TIMEOUT );
+
 }
 
 int gsmConfigureGPIO( unsigned char io, unsigned char dir, unsigned char pull )
@@ -180,9 +207,52 @@ void gsmPowerOff( void )
 	POWEREN_LOW;
 }
 
+void gsmClearBuffers( void )
+{
+	clearTxBuffer();
+	clearRxBuffer();
+}
+
+int gsmPrepareCommand( const char *cmd )
+{
+
+	return writeTxBuffer( cmd );
+}
+
+int gsmExecutePreparedCommand( const char *resp, unsigned int time2answer )
+{
+	flushTxBuffer();
+
+	while( !txBufferEmpty() );
+
+	setTimeout( time2answer );
+	gsmReceiveTimeout = FALSE;
+
+	while ( !gsmReceiveTimeout && !timedOut() );
+
+	if ( !rxBufferEmpty() && rxBufferOverflow() == 0 )
+	{
+
+		if ( bufferSearch( uartGetRxBuffer(), resp ) )
+			return TRUE;
+
+	}
+
+	return FALSE;
+
+}
+
 int gsmExecuteCommand( const char  *cmd, const char *resp, unsigned int time2answer )
 {
 
+	gsmClearBuffers();
+	gsmPrepareCommand( "AT" );
+	gsmPrepareCommand( cmd );
+	gsmPrepareCommand( "\r" );
+
+	return gsmExecutePreparedCommand( resp, time2answer );
+
+/*
 	clearTxBuffer();
 	clearRxBuffer();
 
@@ -205,4 +275,6 @@ int gsmExecuteCommand( const char  *cmd, const char *resp, unsigned int time2ans
 	}
 
 	return FALSE;
+*/
+
 }

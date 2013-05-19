@@ -23,6 +23,8 @@ int bufferRead( cBuffer *buffer, char *data )
 
 	if ( buffer->data_len )
 	{
+//		CRITICAL_SECTION_START;
+
 		*data = buffer->data_ptr[ buffer->data_idx ];
 		buffer->data_idx++;
 
@@ -31,11 +33,13 @@ int bufferRead( cBuffer *buffer, char *data )
 
 		buffer->data_len--;
 
+//		CRITICAL_SECTION_END;
+
 		return TRUE;
 
 	}
-	else
-		return FALSE;
+
+	return FALSE;
 
 }
 
@@ -43,8 +47,12 @@ int bufferWrite( cBuffer *buffer, char data )
 {
 	if ( buffer->data_len < buffer->size )
 	{
+//		CRITICAL_SECTION_START;
+
 		buffer->data_ptr[ ( buffer->data_idx + buffer->data_len ) % buffer->size ] = data;
 		buffer->data_len++;
+
+//		CRITICAL_SECTION_END;
 
 		return TRUE;
 	}

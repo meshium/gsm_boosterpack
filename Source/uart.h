@@ -19,6 +19,7 @@ int uartBufferedTx( char *data );
 void uartBufferedRx( char data );
 int writeTxBuffer( const char *str );
 int readRxBuffer( char *str );
+int sendData( const char *str );
 void clearTxBuffer( void );
 void clearRxBuffer( void );
 void flushTxBuffer( void );

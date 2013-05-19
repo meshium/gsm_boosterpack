@@ -37,8 +37,11 @@
 #define ERROR 2
 #define TIMEOUT 3
 
-#define BREAK_TIMEOUT 10	// timed out if line idle 20ms
+#define BREAK_TIMEOUT 10	// timed out if line idle 10ms
 #define CMD_TIMEOUT 200
+#define SMS_TIMEOUT 5000
+
+#define MAX_SMS_LEN 160
 
 typedef enum status_t {
 	OFF,
@@ -46,13 +49,19 @@ typedef enum status_t {
 	COMMUNICATE,
 	SIM_OK,
 	REG_OK,
-	SMS_OK
+	SMS_OK,
+	STK_OFF
 } status;
 
 int gsmInit( void );
+int gsmCreateSMS( const char *pn );
+int gsmSendSMS( void );
 int gsmConfigureGPIO( unsigned char io, unsigned char dir, unsigned char pull );
 int gsmSetGPIO( unsigned char io, unsigned char val );
 status gsmGetStatus( void );
+void gsmClearBuffers( void );
+int gsmPrepareCommand( const char *cmd );
+int gsmExecutePreparedCommand( const char *resp, unsigned int time2answer );
 int gsmExecuteCommand( const char  *cmd, const char *resp, unsigned int time2answer );
 
 #endif /* WS6318_H_ */

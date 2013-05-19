@@ -12,6 +12,8 @@
 static volatile intFuncPtr USCITxFunc = 0;
 static volatile voidFuncPtr USCIRxFunc = 0;
 static volatile voidFuncVoidPtr TickFunc = 0;
+static volatile voidFuncIntPtr ADC10Func = 0;
+static volatile voidFuncVoidPtr Port1Func = 0;
 static volatile unsigned int timerDiv;
 
 void initTimerA0( unsigned int div )
@@ -29,11 +31,17 @@ void initUsci2Uart( void )
 	P1SEL |= RX + TX;				// USCIA0
 	P1SEL2 |= RX + TX;				// P1.1 - Rxd, P1.2 - Txd
 
-	UCA0CTL1 |= UCSSEL_2;			// SMCLK
-	UCA0BR0 = 104;					// 16MHz 9600
-	UCA0BR1 = 0;					//
-	UCA0MCTL = UCBRF_3 + UCOS16;	//
-	UCA0CTL1 &= ~UCSWRST;			// Initialize USCI state machine
+//	UCA0CTL1 |= UCSSEL_2;			// SMCLK
+//	UCA0BR0 = 104;					// 16MHz 9600
+//	UCA0BR1 = 0;					//
+//	UCA0MCTL = UCBRF_3 + UCOS16;	//
+//	UCA0CTL1 &= ~UCSWRST;			// Initialize USCI state machine
+
+	UCA0CTL1 |= UCSSEL_2;                     // SMCLK
+	UCA0BR0 = 104;                            // 1MHz 9600
+	UCA0BR1 = 0;                              // 1MHz 9600
+	UCA0MCTL = UCBRS0;                        // Modulation UCBRSx = 1
+	UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
 
 	USCIRxFunc = 0;
 	USCITxFunc = 0;
@@ -63,10 +71,12 @@ void attachTimerA0( void( *tick_func )( void ) )
 	STI_TA0;
 }
 
+/*
 #pragma vector=PORT1_VECTOR
 __interrupt void PORT1_ISR()
 {
-	return;
+	if ( Port1Func ) Port1Func();
+	P1IFG &= ~BTN;
 }
 
 #pragma vector=PORT2_VECTOR
@@ -78,8 +88,9 @@ __interrupt void PORT2_ISR()
 #pragma vector=ADC10_VECTOR
 __interrupt void ADC10_ISR()
 {
-	return;
+	if ( ADC10Func ) ADC10Func( ADC10MEM );
 }
+*/
 
 #pragma vector=USCIAB0TX_VECTOR
 __interrupt void USCI0TX_ISR( void )
@@ -89,7 +100,9 @@ __interrupt void USCI0TX_ISR( void )
 
 	if ( USCITxFunc )
 	{
-		if ( USCITxFunc( &data ) ) UCA0TXBUF = data;
+
+		if ( USCITxFunc( &data ) )
+				UCA0TXBUF = data;
 		else CLI_USCITX;
 	}
 
