@@ -41,8 +41,7 @@ int main( void )
 			t = (( ( getTemperature() - 680) * 423) / 1024);
 			itoa( t, temp );
 
-//			gsmCreateSMS( "+79267626160" );
-			gsmCreateSMS( "+79263356718" );
+			gsmCreateSMS( "+00000000000" );   // <====  Insert the recipient phone number here
 
 			sendData( "GSM Boosterpack on the wire. The temperature around is " );
 			sendData( temp );
